@@ -755,8 +755,9 @@ async def main(page: ft.Page):
             allowed_extensions=["db"],
             initial_directory=get_default_db_dir(),
         )
-        if result and result.files:
-            import_path_field.value = result.files[0].path
+        files = result.files if hasattr(result, "files") else result
+        if files:
+            import_path_field.value = files[0].path
             page.update()
 
     def on_migrate(_e):
@@ -813,6 +814,10 @@ async def main(page: ft.Page):
             ft.Row([import_path_field, ft.Button("Datei wählen", on_click=on_pick_file)]),
             ft.Button("Migrieren", on_click=on_migrate, icon=ft.Icons.UPLOAD),
             import_status,
+            ft.Divider(),
+            ft.Text("Verwendete Pfade", size=14, weight=ft.FontWeight.BOLD),
+            ft.Text(f"Datenbank:  {db_path}", size=11, color=ft.Colors.GREY_400, selectable=True),
+            ft.Text(f"Einstellungen:  {config.path}", size=11, color=ft.Colors.GREY_400, selectable=True),
         ],
         scroll=ft.ScrollMode.AUTO,
         expand=True,
@@ -847,7 +852,7 @@ async def main(page: ft.Page):
                             ft.Tab(label="Monat Kosten"),
                             ft.Tab(label="Jahr Kosten"),
                             ft.Tab(label="Einstellungen"),
-                            ft.Tab(label="Import"),
+                            ft.Tab(label="Import & Data"),
                         ]
                     ),
                     ft.TabBarView(
