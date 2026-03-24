@@ -25,6 +25,10 @@ Alle Daten bleiben lokal auf deinem Gerät.
 
 ---
 
+### Screenshot
+
+![Shelly Energy Monitor](src/assets/screen.png)
+
 ### Installation
 
 Die fertige APK für Android sowie die ausführbaren Dateien für Windows und Linux befinden sich im Ordner `build/`.
@@ -97,6 +101,10 @@ All data stays locally on your device.
 - Python 3.9 or higher (manual installation only)
 
 ---
+
+### Screenshot
+
+![Shelly Energy Monitor](src/assets/screen.png)
 
 ### Installation
 
