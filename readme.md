@@ -17,6 +17,16 @@ Alle Daten bleiben lokal auf deinem Gerät.
 
 ---
 
+### Wie funktioniert es?
+
+Der Shelly Pro 3EM erfasst den Stromverbrauch minutengenau – speichert die Rohdaten aber nur für die letzten 60 Tage intern. Diese App liest die Daten aus und überführt sie in eine lokale Datenbank auf deinem Gerät.
+
+Wer die App regelmäßig alle 60 Tage startet und synchronisiert, baut sich so eine lückenlose Langzeitstatistik auf. Wird länger nicht ausgelesen, gehen die ältesten Messwerte im Gerät unwiderruflich verloren – es entstehen echte Lücken. Die erfassten Werte bleiben dabei aber immer exakt: Verbrauch und Kosten werden nie geschätzt oder interpoliert, sondern ausschließlich aus tatsächlich vorhandenen Messdaten berechnet. Eine lückenhafte Statistik ist also unvollständiger, aber nie ungenauer.
+
+Zusätzlich ermöglichen die eigenen realen Verbrauchsdaten einen ehrlichen Tarifvergleich: Die App zeigt direkt, ob sich ein alternativer Stromtarif auf Basis des tatsächlichen Verbrauchs gelohnt hätte.
+
+---
+
 ### Voraussetzungen
 
 - Ein **Shelly Pro 3EM** im Heimnetz
@@ -91,6 +101,16 @@ and compares your current electricity tariff against an alternative one.
 
 The app runs on **Windows, Linux and Android** – no cloud, no subscription, no internet connection required.
 All data stays locally on your device.
+
+---
+
+### How it works
+
+The Shelly Pro 3EM measures electricity consumption to the minute – but stores raw data internally for only the last 60 days. This app reads that data and transfers it into a local database on your device.
+
+By launching and syncing the app regularly every 60 days, you build up a complete long-term record. If you wait longer, the oldest measurements are permanently lost from the device and real gaps appear in your statistics. However, the recorded values are always exact: consumption and costs are never estimated or interpolated, but calculated solely from actually available measurements. A statistics with gaps is therefore less complete, but never less accurate.
+
+Your own real consumption data also enables an honest tariff comparison: the app shows directly whether an alternative electricity tariff would have been worth it based on your actual usage.
 
 ---
 
