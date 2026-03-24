@@ -1,0 +1,26 @@
+[project]
+name = "shelly_monitor"
+version = "0.1.0"
+description = "Shelly Pro 3EM Energy Monitoring"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+    {name = "Volker Heggemann", email = "vohegg@gmail.com"}
+]
+readme = "README.md"
+dependencies = [
+    "flet>=0.81.0",
+    "flet-charts",
+    "requests",
+]
+
+[tool.flet]
+description = "Shows consumption from a shelly"
+version = "2.0.1"
+app.module = "main"
+app.path = "src"
+
+[tool.flet.android]
+permissions = [
+    "android.permission.INTERNET",
+]
