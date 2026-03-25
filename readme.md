@@ -27,6 +27,21 @@ Zusätzlich ermöglichen die eigenen realen Verbrauchsdaten einen ehrlichen Tari
 
 ---
 
+### Warum nicht einfach die Shelly Cloud nutzen?
+
+Der Shelly Pro 3EM kann optional mit der Shelly Cloud verbunden werden — das ist aber freiwillig und bedeutet, dass deine Messdaten an die Server von Shelly übertragen werden. Diese App benötigt das nicht: Sie kommuniziert ausschließlich lokal im Heimnetz, deine Daten verlassen das Gerät nie.
+
+Die Shelly Cloud bietet zwar Verbrauchsstatistiken und Kostenanzeige für einen konfigurierten Tarif, ist aber in mehreren Punkten eingeschränkt: Die Daten reichen nur so weit zurück wie der Shelly sie intern gespeichert hat (60 Tage). Ein Tarifvergleich ist seit 2025 in Pilotform verfügbar, aber nur über eine Partnerschaft mit Verivox und nur für bestimmte Länder — ein freier Vergleich mit einem beliebigen Alternativtarif ist nicht möglich.
+
+Diese App bietet darüber hinaus:
+
+- Unbegrenzte Langzeitstatistik, solange regelmäßig synchronisiert wird
+- Freier Vergleich mit jedem beliebigen Alternativtarif
+- Vollständig offline, keine Datenweitergabe
+- Eine lokale SQLite-Datenbank, die künftig weitere Auswertungen ermöglicht — z.B. Jahresvergleiche, Saisonalität oder CSV-Export
+
+---
+
 ### Voraussetzungen
 
 - Ein **Shelly Pro 3EM** im Heimnetz
@@ -111,6 +126,21 @@ The Shelly Pro 3EM measures electricity consumption to the minute – but stores
 By launching and syncing the app regularly every 60 days, you build up a complete long-term record. If you wait longer, the oldest measurements are permanently lost from the device and real gaps appear in your statistics. However, the recorded values are always exact: consumption and costs are never estimated or interpolated, but calculated solely from actually available measurements. A statistics with gaps is therefore less complete, but never less accurate.
 
 Your own real consumption data also enables an honest tariff comparison: the app shows directly whether an alternative electricity tariff would have been worth it based on your actual usage.
+
+---
+
+### Why not just use the Shelly Cloud?
+
+The Shelly Pro 3EM can optionally be connected to the Shelly Cloud — but this is voluntary and means your measurement data is transmitted to Shelly's servers. This app does not require that: it communicates exclusively within your local network and your data never leaves your device.
+
+The Shelly Cloud does offer consumption statistics and cost display for a single configured tariff, but is limited in several ways: data only goes back as far as the Shelly has stored it internally (60 days). A tariff comparison feature was introduced in 2025 as a pilot, but only through a partnership with Verivox and only for certain countries — a free comparison with any alternative tariff of your choice is not possible.
+
+This app additionally offers:
+
+- Unlimited long-term statistics, as long as you sync regularly
+- Free comparison with any alternative tariff you choose
+- Fully offline, no data sharing
+- A local SQLite database that allows further analysis in the future — such as year-on-year comparisons, seasonality, or CSV export
 
 ---
 

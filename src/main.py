@@ -138,11 +138,8 @@ async def main(page: ft.Page):
 
 
         def build_charts(_e=None):
-            win_w = page.width
-            available_w = int(win_w * 0.92 - 70)
-            gap = 2
-            dynamic_width = (available_w - (n * gap)) / n
-            segment_w = available_w / max(n, 1)
+            bar_width = (page.width - 70) / n * 0.9
+            segment_w = (page.width - 70) / max(n, 1)
 
             is_narrow = segment_w < 50
             rot_val = -1.5708 if is_narrow else 0
@@ -160,7 +157,7 @@ async def main(page: ft.Page):
                 groups_up.append(fch.BarChartGroup(x=i, rods=[
                     fch.BarChartRod(
                         from_y=0, to_y=cons,
-                        width=dynamic_width, color=COLOR_CONSUMPTION,
+                        width=bar_width, color=COLOR_CONSUMPTION,
                         border_radius=1,
                         tooltip=f"{cons:.1f} kWh | {cur_var:.2f} {settings['currency']}",
                     )
@@ -168,7 +165,7 @@ async def main(page: ft.Page):
                 groups_down.append(fch.BarChartGroup(x=i, rods=[
                     fch.BarChartRod(
                         from_y=0, to_y=-feedin,
-                        width=dynamic_width, color=COLOR_FEEDIN,
+                        width=bar_width, color=COLOR_FEEDIN,
                         border_radius=1,
                         tooltip=f"{feedin:.1f} kWh | {f_comp:.2f} {settings['currency']}",
                     )
@@ -269,11 +266,12 @@ async def main(page: ft.Page):
 
         COLOR_CUR_BASE, COLOR_CUR_ENERGY = ft.Colors.ORANGE_200, ft.Colors.ORANGE_400
         COLOR_ALT_BASE, COLOR_ALT_ENERGY = ft.Colors.BLUE_200, ft.Colors.BLUE_400
-        container_chart = ft.Container(expand=True)
 
-        total_cur, total_alt = sum(c["cur_total"] for c in costs_data), sum(c["alt_total"] for c in costs_data)
-        total_cur_base, total_alt_base = sum(c.get("cur_base", 0.0) for c in costs_data), sum(
-            c.get("alt_base", 0.0) for c in costs_data)
+        # Totals for summary
+        total_cur      = sum(c["cur_total"] for c in costs_data)
+        total_alt      = sum(c["alt_total"] for c in costs_data)
+        total_cur_base = sum(c.get("cur_base", 0.0) for c in costs_data)
+        total_alt_base = sum(c.get("alt_base", 0.0) for c in costs_data)
         total_cur_energy = total_cur - total_cur_base
         total_alt_energy = total_alt - total_alt_base
         diff             = total_cur - total_alt
@@ -287,13 +285,13 @@ async def main(page: ft.Page):
         summary_row = ft.Container(
             content=ft.Row([
                 ft.Column([
-                    ft.Text(f"Aktuell: {total_cur:.2f} {s['currency']}",            size=11, color=COLOR_CURRENT,    weight="bold"),
-                    ft.Text(f"  Energie: {total_cur_energy:.2f} {s['currency']}",     size=10, color=COLOR_CUR_ENERGY),
-                    ft.Text(f"  Grundpr.: {total_cur_base:.2f} {s['currency']}",      size=10, color=COLOR_CUR_BASE),
-                    ft.Text(f"Alt: {total_alt:.2f} {s['currency']}",                size=11, color=COLOR_ALT,        weight="bold"),
-                    ft.Text(f"  Energie: {total_alt_energy:.2f} {s['currency']}",     size=10, color=COLOR_ALT_ENERGY),
-                    ft.Text(f"  Grundpr.: {total_alt_base:.2f} {s['currency']}",      size=10, color=COLOR_ALT_BASE),
-                    ft.Text(f"Differenz: {diff:+.2f} {s['currency']}",              size=11,
+                    ft.Text(f"Aktuell: {total_cur:.2f} {s['currency']}",           size=11, color=COLOR_CURRENT,    weight="bold"),
+                    ft.Text(f"  Energie: {total_cur_energy:.2f} {s['currency']}",   size=10, color=COLOR_CUR_ENERGY),
+                    ft.Text(f"  Grundpr.: {total_cur_base:.2f} {s['currency']}",    size=10, color=COLOR_CUR_BASE),
+                    ft.Text(f"Alt: {total_alt:.2f} {s['currency']}",               size=11, color=COLOR_ALT,        weight="bold"),
+                    ft.Text(f"  Energie: {total_alt_energy:.2f} {s['currency']}",   size=10, color=COLOR_ALT_ENERGY),
+                    ft.Text(f"  Grundpr.: {total_alt_base:.2f} {s['currency']}",    size=10, color=COLOR_ALT_BASE),
+                    ft.Text(f"Differenz: {diff:+.2f} {s['currency']}",             size=11,
                             color=ft.Colors.RED_400 if diff > 0 else ft.Colors.GREEN_400, weight="bold"),
                 ], spacing=1),
                 ft.Column([
@@ -309,125 +307,84 @@ async def main(page: ft.Page):
         )
 
         info_text = ft.Text("", size=10, color=ft.Colors.GREY_400, italic=True)
-        info_row  = ft.Container(content=info_text, padding=ft.Padding.symmetric(horizontal=10, vertical=2))
+
+        # Exactly like demo: named outer container, chart directly in inner Container(expand=True)
+        y_axis_w        = 40
+        rod_count       = n * 2
+        chart_container = ft.Container(expand=True)
 
         def build_chart(_e=None):
-            win_w       = page.width
-            available_w = int(win_w * 0.92 - 70)
-            gap = 2
-            bar_width = (available_w - (n * 2 * gap)) / (n * 2)
-            segment_w = available_w / max(n, 1)
-
-            is_narrow = segment_w < 60
-            rot_val = -1.5708 if is_narrow else 0
-
-            bars = []
-            top_labels = []
-            bottom_labels = []
+            bar_width = (page.width - y_axis_w - 20) / rod_count * 0.9
+            groups      = []
+            top_labels  = []
+            bot_labels  = []
 
             for i, c in enumerate(costs_data):
                 cur_b, cur_t = c.get("cur_base", 0), c["cur_total"]
                 alt_b, alt_t = c.get("alt_base", 0), c["alt_total"]
-                x_cur = i * 2
-                x_alt = i * 2 + 1
 
-                # Current tariff bar
-                bars.append(fch.BarChartGroup(
-                    x=x_cur,
-                    rods=[fch.BarChartRod(
-                        from_y=0, to_y=cur_t,
-                        width=bar_width,
-                        color=COLOR_CUR_ENERGY,
-                        border_radius=1,
-                        tooltip=f"{cur_t:.2f} {s['currency']}\n{cur_t - cur_b:.2f} {s['currency']}\n{cur_b:.2f} {s['currency']}",
-                        stack_items=[
-                            fch.BarChartRodStackItem(0, cur_b, COLOR_CUR_BASE),
-                            fch.BarChartRodStackItem(cur_b, cur_t, COLOR_CUR_ENERGY),
-                        ],
-                    )],
-                    spacing=0,
-                ))
-
-                if segment_w > 50:
-                    top_labels.append(fch.ChartAxisLabel(
-                        value=x_cur,
-                        label=ft.Container(
-                            content=ft.Text(f"{cur_t:.0f}", size=8, color=COLOR_CUR_ENERGY, rotate=rot_val),
-                            padding=ft.Padding.only(bottom=20) if is_narrow else 0,
+                groups.append(fch.BarChartGroup(
+                    x=i,
+                    rods=[
+                        fch.BarChartRod(
+                            from_y=0, to_y=cur_t,
+                            width=bar_width,
+                            color=COLOR_CUR_ENERGY,
+                            border_radius=0,
+                            stack_items=[
+                                fch.BarChartRodStackItem(0, cur_b, COLOR_CUR_BASE),
+                                fch.BarChartRodStackItem(cur_b, cur_t, COLOR_CUR_ENERGY),
+                            ],
                         ),
-                    ))
-
-                bottom_labels.append(fch.ChartAxisLabel(
-                    value=x_cur,
-                    label=ft.Container(
-                        content=ft.Text(labels[i], size=9, rotate=rot_val),
-                        padding=ft.Padding.only(top=15) if is_narrow else 0,
-                    ),
-                ))
-
-                # Alternative tariff bar
-                bars.append(fch.BarChartGroup(
-                    x=x_alt,
-                    rods=[fch.BarChartRod(
-                        from_y=0, to_y=alt_t,
-                        width=bar_width,
-                        color=COLOR_ALT_ENERGY,
-                        border_radius=1,
-                        tooltip=f"{alt_t:.2f} {s['currency']}\n{alt_t - alt_b:.2f} {s['currency']}\n{alt_b:.2f} {s['currency']}",
-                        stack_items=[
-                            fch.BarChartRodStackItem(0, alt_b, COLOR_ALT_BASE),
-                            fch.BarChartRodStackItem(alt_b, alt_t, COLOR_ALT_ENERGY),
-                        ],
-                    )],
-                    spacing=0,
-                ))
-
-                if segment_w > 50:
-                    top_labels.append(fch.ChartAxisLabel(
-                        value=x_alt,
-                        label=ft.Container(
-                            content=ft.Text(f"{alt_t:.0f}", size=8, color=COLOR_ALT_ENERGY, rotate=rot_val),
-                            padding=ft.Padding.only(bottom=20) if is_narrow else 0,
+                        fch.BarChartRod(
+                            from_y=0, to_y=alt_t,
+                            width=bar_width,
+                            color=COLOR_ALT_ENERGY,
+                            border_radius=0,
+                            stack_items=[
+                                fch.BarChartRodStackItem(0, alt_b, COLOR_ALT_BASE),
+                                fch.BarChartRodStackItem(alt_b, alt_t, COLOR_ALT_ENERGY),
+                            ],
                         ),
-                    ))
+                    ],
+                ))
+                top_labels.append(fch.ChartAxisLabel(
+                    value=i,
+                    label=ft.Text(f"{cur_t:.0f} / {alt_t:.0f}", size=9, color=ft.Colors.GREY_300),
+                ))
+                bot_labels.append(fch.ChartAxisLabel(
+                    value=i,
+                    label=ft.Text(labels[i], size=11),
+                ))
 
-            bar_data_costs = [(c.get("cur_base",0), c["cur_total"], c.get("alt_base",0), c["alt_total"]) for c in costs_data]
-
-            def on_costs_event(e: fch.BarChartEvent):
-                if e.type in ("TapUpEvent", "PointerDownEvent", "FlTapUpEvent") and e.group_index is not None and e.group_index >= 0:
-                    gi = e.group_index
-                    month_i = gi // 2
-                    is_alt  = gi % 2 == 1
-                    if month_i < len(bar_data_costs):
-                        cb, ct, ab, at = bar_data_costs[month_i]
-                        lbl = labels[month_i]
-                        if is_alt:
-                            info_text.value = f"{lbl}  Alt: {at:.2f} | Energie: {at-ab:.2f} | Grundpr.: {ab:.2f} {s['currency']}"
-                        else:
-                            info_text.value = f"{lbl}  Aktuell: {ct:.2f} | Energie: {ct-cb:.2f} | Grundpr.: {cb:.2f} {s['currency']}"
-                    page.update()
-
-            container_chart.content = fch.BarChart(
-                groups=bars,
-                interactive=True,
-                border=None,
-                max_y=chart_limit,
-                on_event=on_costs_event,
-                left_axis=fch.ChartAxis(label_size=50),
-                top_axis=fch.ChartAxis(
-                    labels=top_labels,
-                    label_size=35 if (top_labels and is_narrow) else (20 if top_labels else 0),
-                ),
-                bottom_axis=fch.ChartAxis(
-                    labels=bottom_labels,
-                    label_size=45 if is_narrow else 25,
-                ),
-                tooltip=fch.BarChartTooltip(margin=-40),
+            # Manual Y-axis
+            step   = round_dynamic(chart_limit / 5)
+            ticks  = [int(step * i) for i in range(6) if step * i <= chart_limit + step]
+            y_axis = ft.Column(
+                [ft.Text(str(t), size=11) for t in reversed(ticks)],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                width=y_axis_w,
             )
+
+            chart = fch.BarChart(
+                groups=groups,
+                max_y=chart_limit,
+                min_y=0,
+                interactive=False,
+                border=None,
+                left_axis=None,
+                top_axis=fch.ChartAxis(labels=top_labels, label_size=20),
+                bottom_axis=fch.ChartAxis(labels=bot_labels, label_size=25),
+            )
+
+            chart_container.content = ft.Row([
+                y_axis,
+                ft.Container(chart, expand=True),
+            ])
             page.update()
 
         build_chart()
-        return ft.Column([summary_row, info_row, container_chart], expand=True), build_chart
+        return ft.Column([summary_row, info_text, chart_container], expand=True), build_chart
 
     def cost_summary_text(totals_cur, totals_alt):
         """Return a summary Text widget showing totals and difference for two tariffs."""
@@ -835,7 +792,7 @@ async def main(page: ft.Page):
         if yearly_costs_resizer[0]:
             yearly_costs_resizer[0]()
 
-    page.on_resized = on_resized
+    page.on_resize = on_resized
 
     page.add(
         ft.Tabs(
