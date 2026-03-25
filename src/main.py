@@ -2,6 +2,7 @@
 
 import math
 import sqlite3
+from datetime import datetime,timedelta
 from pathlib import Path
 import flet as ft
 import flet_charts as fch
@@ -50,6 +51,8 @@ async def main(page: ft.Page):
             "alt_price":      float(config.get(sec, "alt_price",      str(d.DEFAULT_ALT_PRICE_PER_KWH))),
             "alt_base":       float(config.get(sec, "alt_base",       str(d.DEFAULT_ALT_BASE_PER_MONTH))),
             "currency":       config.get(sec, "currency",             d.DEFAULT_CURRENCY),
+            "date_from":      config.get(sec, "date_from",            (datetime.now() - timedelta(days=730)).strftime("%d.%m.%Y")),
+            "date_to":        config.get(sec, "date_to",              datetime.now().strftime("%d.%m.%Y")),
         }
 
     def save_setting(key, value):
@@ -476,7 +479,16 @@ async def main(page: ft.Page):
         mac = current_mac[0]
         if not mac:
             return
-        records      = d.load_reference_days(db_path, mac)
+        records = d.load_reference_days(db_path, mac)
+
+        # Filter by date range from settings
+        try:
+            date_from = datetime.strptime(settings["date_from"], "%d.%m.%Y").strftime("%Y-%m-%d")
+            date_to   = datetime.strptime(settings["date_to"],   "%d.%m.%Y").strftime("%Y-%m-%d")
+            records   = [r for r in records if date_from <= r["date"] <= date_to]
+        except Exception:
+            pass  # if dates are invalid, show all records
+
         monthly_data = d.calculate_monthly(records, settings["price_per_kwh"])
         yearly_data  = d.calculate_yearly(monthly_data, settings["price_per_kwh"])
         cost_monthly = d.cost_summary_monthly(
@@ -675,9 +687,69 @@ async def main(page: ft.Page):
         )
         return result
 
+    def parse_german_date(text: str):
+        text = text.strip()
+        if text.lower() in ("heute", "today"):
+            return datetime.now().strftime("%d.%m.%Y")
+        # 1) Vollständige deutsche Formate
+        for fmt in ("%d.%m.%Y", "%d.%m.%y", "%d-%m-%Y", "%d-%m-%y"):
+            try:
+                # .strftime wandelt das Objekt in den gewünschten String um
+                return datetime.strptime(text, fmt).strftime("%d.%m.%Y")
+            except:
+                pass
+        # 2) Monat + Jahr
+        for fmt in ("%m.%Y", "%m-%Y", "%m/%Y", "%b %Y", "%B %Y"):
+            try:
+                return datetime.strptime(text, fmt).replace(day=1).strftime("%d.%m.%Y")
+            except:
+                pass
+        return text
+
+    def checkdate(e):
+        """Validate, save and apply a date range field on blur."""
+        ctrl = e.control
+        dt = parse_german_date(ctrl.value)
+        if dt:
+            ctrl.value = str(dt)
+            key = "date_from" if ctrl == daterange_from else "date_to"
+            save_setting(key, ctrl.value)
+            settings.update(load_settings())
+            load_data()
+            refresh_all_charts()
+        else:
+            ctrl.value = ""
+        page.update()
+
+    def on_reset_range(_e):
+        """Reset date range to first available DB record up to today."""
+        mac = current_mac[0]
+        if not mac:
+            return
+        all_records = d.load_reference_days(db_path, mac)
+        if all_records:
+            first = datetime.strptime(all_records[0]["date"], "%Y-%m-%d").strftime("%d.%m.%Y")
+        else:
+            first = (datetime.now() - timedelta(days=730)).strftime("%d.%m.%Y")
+        today = datetime.now().strftime("%d.%m.%Y")
+        daterange_from.value = first
+        daterange_to.value   = today
+        save_setting("date_from", first)
+        save_setting("date_to",   today)
+        settings.update(load_settings())
+        load_data()
+        refresh_all_charts()
+        page.update()
+
     # ── Import / Migration tab ────────────────────────────────────────────────
+
+
     import_status      = ft.Text("", color=ft.Colors.GREY_400)
     import_path_field  = ft.TextField(label="Pfad zur alten DB", width=400, read_only=True)
+    daterange_from = ft.TextField(label="Zeitraum begin: ", width=200, read_only=False, on_blur=checkdate)
+    daterange_to   = ft.TextField(label="Zeitraum Ende:",  width=200, read_only=False, on_blur=checkdate)
+    daterange_from.value = settings["date_from"]
+    daterange_to.value   = settings["date_to"]
 
     def get_default_db_dir():
         """Return the default database directory for the current platform."""
@@ -771,6 +843,10 @@ async def main(page: ft.Page):
             ft.Row([import_path_field, ft.Button("Datei wählen", on_click=on_pick_file)]),
             ft.Button("Migrieren", on_click=on_migrate, icon=ft.Icons.UPLOAD),
             import_status,
+            ft.Divider(),
+            ft.Text("Anzeige-Zeitraum", size=14, weight=ft.FontWeight.BOLD),
+            ft.Row([daterange_from, daterange_to]),
+            ft.Button("Zeitraum zurücksetzen", on_click=on_reset_range, icon=ft.Icons.RESTART_ALT),
             ft.Divider(),
             ft.Text("Verwendete Pfade", size=14, weight=ft.FontWeight.BOLD),
             ft.Text(f"Datenbank:  {db_path}", size=11, color=ft.Colors.GREY_400, selectable=True),
