@@ -38,19 +38,19 @@ async def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = 10
     page.safe_area = True
-
+    print('Starte...')
     # Create config once – path via FLET_APP_STORAGE_DATA or fallback
     config = AppConfig()
-
+    print('Config gelesen')
     # Set locale from config if available
     saved_locale = config.get("main", "locale", None)
     if saved_locale:
         ts.set_locale(saved_locale)
-
+    print("Locale gesetzt")
     # ── Read settings ─────────────────────────────────────────────────────────
     # Active MAC – set after discover/connect
     current_mac = [config.get("main", "last_mac", None)]
-
+    print(f"Get Mac {current_mac}")
     def load_settings():
         """Load all user settings for the currently active MAC."""
         mac = current_mac[0]
@@ -90,11 +90,13 @@ async def main(page: ft.Page):
         db_dir = base / "shelly"
         db_dir.mkdir(parents=True, exist_ok=True)
         return db_dir / "energy.db"
-
+    print("Lades setting ")
     settings = load_settings()
     db_path  = get_db_path()
+    print("done")
+    print("Init db")
     db.init_db(db_path)
-
+    print("done")
     # ── State ─────────────────────────────────────────────────────────────────
     monthly_data = []
     yearly_data  = []
@@ -400,18 +402,6 @@ async def main(page: ft.Page):
 
         build_chart()
         return ft.Column([summary_row, info_text, chart_container], expand=True), build_chart
-
-    def cost_summary_text(totals_cur, totals_alt):
-        """Return a summary Text widget showing totals and difference for two tariffs."""
-        total_cur = sum(totals_cur)
-        total_alt = sum(totals_alt)
-        diff      = total_cur - total_alt
-        result    = ft.Text(
-            f"{_("Gesamt aktuell:")} {total_cur:.2f} {settings['currency']}  |  "
-            f"{_("Alternativ:")} {total_alt:.2f} {settings['currency']}  |  "
-            f"{_("Differenz:")} {diff:+.2f} {settings['currency']}"
-        )
-        return result
 
     # ── Chart resize callbacks ────────────────────────────────────────────────
 
@@ -895,7 +885,7 @@ async def main(page: ft.Page):
             monthly_costs_resizer[0]()
         if yearly_costs_resizer[0]:
             yearly_costs_resizer[0]()
-
+    print("Page setup")
     page.on_resize = on_resized
 
     page.add(
@@ -942,7 +932,9 @@ async def main(page: ft.Page):
             lbl_shelly_status.value = "Shelly – verbunden"
             shelly_info_row.content = make_shelly_info(dev)
             shelly_info_row.visible = True
+    print("load data")
     load_data()
+    print("done")
     refresh_all_charts()
     page.update()
     if not monthly_data:

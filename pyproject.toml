@@ -12,6 +12,7 @@ dependencies = [
     "flet>=0.81.0",
     "flet-charts",
     "requests",
+    "pillow"
 ]
 
 [tool.flet]
