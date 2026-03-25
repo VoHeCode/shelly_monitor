@@ -9,8 +9,15 @@ import flet_charts as fch
 from config import AppConfig
 import shelly_db as db
 import data as d
+from translator import TranslationSystem
 
-# Chart colours matching the original hex values
+ts = TranslationSystem("de_DE")
+_ = ts.tr
+# uncomment this for a translation in another language
+#print(ts.list_locales())
+#ts.run_tr_extractor_ui()
+#exit()
+#Chart colours matching the original hex values
 COLOR_CONSUMPTION = ft.Colors.BLUE_300    # #64B5F6 light blue
 COLOR_FEEDIN      = ft.Colors.GREEN_300   # #81C784 light green
 COLOR_CURRENT     = ft.Colors.ORANGE_400  # #FF9800 orange
@@ -34,6 +41,11 @@ async def main(page: ft.Page):
 
     # Create config once – path via FLET_APP_STORAGE_DATA or fallback
     config = AppConfig()
+
+    # Set locale from config if available
+    saved_locale = config.get("main", "locale", None)
+    if saved_locale:
+        ts.set_locale(saved_locale)
 
     # ── Read settings ─────────────────────────────────────────────────────────
     # Active MAC – set after discover/connect
@@ -130,9 +142,9 @@ async def main(page: ft.Page):
             ], spacing=5)
 
         legend = ft.Row([
-            legend_item(COLOR_CONSUMPTION, "Verbrauch (kWh)"),
-            legend_item(COLOR_FEEDIN, "Einspeisung (kWh)"),
-            legend_item(ft.Colors.GREY_400, "Grundpreis (€)"),
+            legend_item(COLOR_CONSUMPTION, _("Verbrauch (kWh)")),
+            legend_item(COLOR_FEEDIN, _("Einspeisung (kWh)")),
+            legend_item(ft.Colors.GREY_400, _("Grundpreis (€)")),
         ],
             alignment=ft.MainAxisAlignment.CENTER,
         )
@@ -247,13 +259,13 @@ async def main(page: ft.Page):
         summary_row = ft.Container(
             content=ft.Row([
                 ft.Column([
-                    ft.Text(f"Verbrauch: {total_kwh:.1f} kWh",                              size=11, color=ft.Colors.BLUE_700,  weight="bold"),
-                    ft.Text(f"Energie: {total_energy_cost:.2f} {settings['currency']}",      size=10),
-                    ft.Text(f"Grundpreis: {total_base:.2f} {settings['currency']}",          size=10, color=ft.Colors.GREY_400),
+                    ft.Text(f"{_("Verbrauch:")} {total_kwh:.1f} kWh",                              size=11, color=ft.Colors.BLUE_700,  weight="bold"),
+                    ft.Text(f"{_("Energie:")} {total_energy_cost:.2f} {settings['currency']}",      size=10),
+                    ft.Text(f"{_("Grundpreis:")} {total_base:.2f} {settings['currency']}",          size=10, color=ft.Colors.GREY_400),
                 ], spacing=1),
                 ft.Column([
-                    ft.Text(f"Einspeisung: {total_feedin:.1f} kWh",                          size=11, color=ft.Colors.GREEN_700, weight="bold"),
-                    ft.Text(f"Vergütung: {total_compensation:.2f} {settings['currency']}",  size=10),
+                    ft.Text(f"{_("Einspeisung:")} {total_feedin:.1f} kWh",                          size=11, color=ft.Colors.GREEN_700, weight="bold"),
+                    ft.Text(f"{_("Vergütung:")} {total_compensation:.2f} {settings['currency']}",  size=10),
                 ], spacing=1),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             padding=10, bgcolor=ft.Colors.GREY_900, border_radius=10
@@ -288,20 +300,20 @@ async def main(page: ft.Page):
         summary_row = ft.Container(
             content=ft.Row([
                 ft.Column([
-                    ft.Text(f"Aktuell: {total_cur:.2f} {s['currency']}",           size=11, color=COLOR_CURRENT,    weight="bold"),
-                    ft.Text(f"  Energie: {total_cur_energy:.2f} {s['currency']}",   size=10, color=COLOR_CUR_ENERGY),
-                    ft.Text(f"  Grundpr.: {total_cur_base:.2f} {s['currency']}",    size=10, color=COLOR_CUR_BASE),
-                    ft.Text(f"Alt: {total_alt:.2f} {s['currency']}",               size=11, color=COLOR_ALT,        weight="bold"),
-                    ft.Text(f"  Energie: {total_alt_energy:.2f} {s['currency']}",   size=10, color=COLOR_ALT_ENERGY),
-                    ft.Text(f"  Grundpr.: {total_alt_base:.2f} {s['currency']}",    size=10, color=COLOR_ALT_BASE),
-                    ft.Text(f"Differenz: {diff:+.2f} {s['currency']}",             size=11,
+                    ft.Text(f"{_("Aktuell:")} {total_cur:.2f} {s['currency']}",           size=11, color=COLOR_CURRENT,    weight="bold"),
+                    ft.Text(f"{_("  Energie:")} {total_cur_energy:.2f} {s['currency']}",   size=10, color=COLOR_CUR_ENERGY),
+                    ft.Text(f"{_("  Grundpr.:")} {total_cur_base:.2f} {s['currency']}",    size=10, color=COLOR_CUR_BASE),
+                    ft.Text(f"{_("Alt:")} {total_alt:.2f} {s['currency']}",               size=11, color=COLOR_ALT,        weight="bold"),
+                    ft.Text(f"{_("  Energie:")} {total_alt_energy:.2f} {s['currency']}",   size=10, color=COLOR_ALT_ENERGY),
+                    ft.Text(f"{_("  Grundpr.:")} {total_alt_base:.2f} {s['currency']}",    size=10, color=COLOR_ALT_BASE),
+                    ft.Text(f"{_("Differenz:")} {diff:+.2f} {s['currency']}",             size=11,
                             color=ft.Colors.RED_400 if diff > 0 else ft.Colors.GREEN_400, weight="bold"),
                 ], spacing=1),
                 ft.Column([
-                    legend_item(COLOR_CUR_ENERGY, "Energie akt."),
-                    legend_item(COLOR_CUR_BASE,   "Grundpr. akt."),
-                    legend_item(COLOR_ALT_ENERGY, "Energie alt."),
-                    legend_item(COLOR_ALT_BASE,   "Grundpr. alt."),
+                    legend_item(COLOR_CUR_ENERGY, _("Energie akt.")),
+                    legend_item(COLOR_CUR_BASE,   _("Grundpr. akt.")),
+                    legend_item(COLOR_ALT_ENERGY, _("Energie alt.")),
+                    legend_item(COLOR_ALT_BASE,   _("Grundpr. alt.")),
                 ], spacing=2),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             padding=ft.Padding.all(10),
@@ -395,9 +407,9 @@ async def main(page: ft.Page):
         total_alt = sum(totals_alt)
         diff      = total_cur - total_alt
         result    = ft.Text(
-            f"Gesamt aktuell: {total_cur:.2f} {settings['currency']}  |  "
-            f"Alternativ: {total_alt:.2f} {settings['currency']}  |  "
-            f"Differenz: {diff:+.2f} {settings['currency']}"
+            f"{_("Gesamt aktuell:")} {total_cur:.2f} {settings['currency']}  |  "
+            f"{_("Alternativ:")} {total_alt:.2f} {settings['currency']}  |  "
+            f"{_("Differenz:")} {diff:+.2f} {settings['currency']}"
         )
         return result
 
@@ -411,7 +423,7 @@ async def main(page: ft.Page):
     def refresh_monthly_kwh():
         """Rebuild the monthly kWh chart from current data."""
         if not monthly_data:
-            chart_monthly_kwh.controls = [ft.Text("Keine Daten vorhanden, bitte synchronisieren.")]
+            chart_monthly_kwh.controls = [ft.Text(_("Keine Daten vorhanden, bitte synchronisieren."))]
             monthly_kwh_resizer[0] = None
             return
         chart, build_charts        = make_kwh_chart(
@@ -426,7 +438,7 @@ async def main(page: ft.Page):
     def refresh_yearly_kwh():
         """Rebuild the yearly kWh chart from current data."""
         if not yearly_data:
-            chart_yearly_kwh.controls = [ft.Text("Keine Daten vorhanden, bitte synchronisieren.")]
+            chart_yearly_kwh.controls = [ft.Text(_("Keine Daten vorhanden, bitte synchronisieren."))]
             yearly_kwh_resizer[0] = None
             return
         chart, build_charts       = make_kwh_chart(
@@ -441,7 +453,7 @@ async def main(page: ft.Page):
     def refresh_monthly_costs():
         """Rebuild the monthly costs chart from current data."""
         if not cost_monthly:
-            chart_monthly_costs.controls = [ft.Text("Keine Daten vorhanden, bitte synchronisieren.")]
+            chart_monthly_costs.controls = [ft.Text(_("Keine Daten vorhanden, bitte synchronisieren."))]
             monthly_costs_resizer[0] = None
             return
         chart, build_chart           = make_costs_chart(
@@ -454,7 +466,7 @@ async def main(page: ft.Page):
     def refresh_yearly_costs():
         """Rebuild the yearly costs chart from current data."""
         if not cost_yearly:
-            chart_yearly_costs.controls = [ft.Text("Keine Daten vorhanden, bitte synchronisieren.")]
+            chart_yearly_costs.controls = [ft.Text(_("Keine Daten vorhanden, bitte synchronisieren."))]
             yearly_costs_resizer[0] = None
             return
         chart, build_chart          = make_costs_chart(
@@ -521,7 +533,7 @@ async def main(page: ft.Page):
 
     # Shelly IP field kept separate so the search button can access it
     field_shelly_ip = ft.TextField(
-        label="Shelly IP",
+        label=_("Shelly IP"),
         value=settings["shelly_ip"],
         width=300,
     )
@@ -533,7 +545,7 @@ async def main(page: ft.Page):
 
     field_shelly_ip.on_blur = on_blur_shelly_ip
 
-    lbl_shelly_status = ft.Text("Shelly – Bitte Ihren Rechner im gleichen Netzwerk / WLAN einloggen")
+    lbl_shelly_status = ft.Text(_("Shelly – Bitte Ihren Rechner im gleichen Netzwerk / WLAN einloggen"))
     shelly_info_row   = ft.Container(visible=False)  # populated after discovery
 
     def make_shelly_info(found):
@@ -542,7 +554,7 @@ async def main(page: ft.Page):
         fw_ver   = fw_full.split("/")[-1] if "/" in fw_full else fw_full
         updated  = found.get("updated", "")
         date_str = updated[:10] if len(updated) >= 10 else updated
-        time_str = (updated[11:] + " Uhr") if len(updated) > 10 else ""
+        time_str = (updated[11:] + _(" Uhr")) if len(updated) > 10 else ""
 
         def info_item(label, value, color):
             return ft.Column([
@@ -579,29 +591,29 @@ async def main(page: ft.Page):
         db.upsert_device(db_path, found)
         settings.update(load_settings())
         field_shelly_ip.value   = found["ip"]
-        lbl_shelly_status.value = "Shelly – verbunden"
+        lbl_shelly_status.value = _("Shelly – verbunden")
         shelly_info_row.content = make_shelly_info(found)
         shelly_info_row.visible = True
         load_data()
         refresh_all_charts()
-        show_snackbar(page, f"Shelly gefunden: {found['ip']}")
+        show_snackbar(page, f"{_("Shelly gefunden:")} {found['ip']}")
         page.update()
 
     def on_discover_by_ip(ip):
         """Connect directly to a Shelly at a known IP address."""
-        show_snackbar(page, f"Verbinde mit {ip} ...")
+        show_snackbar(page, f"{_("Verbinde mit")} {ip} ...")
         found = db.get_device_info(ip)
         if found:
             _apply_found(found)
         else:
-            show_snackbar(page, f"Kein Shelly unter {ip} erreichbar.")
+            show_snackbar(page, _("Kein Shelly unter {} erreichbar.").format(ip))
 
     def on_discover(_e):
         """Scan the local network for a Shelly device."""
         btn_discover.disabled = True
-        show_snackbar(page, "Suche gestartet …", bgcolor=ft.Colors.GREEN_700, duration=2000)
+        show_snackbar(page, _("Suche gestartet …"), bgcolor=ft.Colors.GREEN_700, duration=2000)
         page.update()
-        show_snackbar(page, "Suche läuft – bitte warten ...")
+        show_snackbar(page, _("Suche läuft – bitte warten ..."))
 
         def log_discover(m):
             show_snackbar(page, str(m))
@@ -610,11 +622,24 @@ async def main(page: ft.Page):
         if found:
             _apply_found(found)
         else:
-            show_snackbar(page, "Kein Shelly gefunden. Bitte IP manuell eingeben.")
+            show_snackbar(page, _("Kein Shelly gefunden. Bitte IP manuell eingeben."))
         btn_discover.disabled = False
         page.update()
 
-    btn_discover = ft.Button("Shelly suchen", on_click=on_discover)
+    btn_discover = ft.Button(_("Shelly suchen"), on_click=on_discover)
+
+    def on_locale_select(e):
+        config.set("main", "locale", e.control.value)
+        ts.set_locale(e.control.value)
+        page.update()
+
+    locale_dropdown = ft.Dropdown(
+        label=_("Sprache"),
+        width=300,
+        value=config.get("main", "locale", "de_DE"),
+        options=[ft.dropdown.Option(loc) for loc in ts.list_locales()],
+        on_select=on_locale_select,
+    )
 
     settings_content = ft.Column(
         [
@@ -623,17 +648,20 @@ async def main(page: ft.Page):
             btn_discover,
             shelly_info_row,
             ft.Divider(),
-            ft.Text("Aktueller Tarif"),
-            make_field("Bezugspreis pro kWh",    "price_per_kwh",  settings["price_per_kwh"]),
-            make_field("Einspeisevergütung/kWh", "feedin_price",   settings["feedin_price"]),
-            make_field("Grundpreis/Monat",        "base_per_month", settings["base_per_month"]),
+            ft.Text(_("Aktueller Tarif")),
+            make_field(_("Bezugspreis pro kWh"),    "price_per_kwh",  settings["price_per_kwh"]),
+            make_field(_("Einspeisevergütung/kWh"), "feedin_price",   settings["feedin_price"]),
+            make_field(_("Grundpreis/Monat"),        "base_per_month", settings["base_per_month"]),
             ft.Divider(),
-            ft.Text("Alternativer Tarif"),
-            make_field("Alt. Bezugspreis/kWh",   "alt_price", settings["alt_price"]),
-            make_field("Alt. Grundpreis/Monat",  "alt_base",  settings["alt_base"]),
+            ft.Text(_("Alternativer Tarif")),
+            make_field(_("Alt. Bezugspreis/kWh"),   "alt_price", settings["alt_price"]),
+            make_field(_("Alt. Grundpreis/Monat"),  "alt_base",  settings["alt_base"]),
             ft.Divider(),
-            ft.Text("Anzeige"),
-            make_field("Währung", "currency", settings["currency"]),
+            ft.Text(_("Anzeige")),
+            make_field(_("Währung"), "currency", settings["currency"]),
+            ft.Divider(),
+            ft.Text(_("Sprache - braucht vielleicht Neustart.")),
+            locale_dropdown,
         ],
         scroll=ft.ScrollMode.AUTO,
         expand=True,
@@ -646,12 +674,12 @@ async def main(page: ft.Page):
     def on_sync(_e):
         """Trigger a data sync from the Shelly device."""
         if not current_mac[0]:
-            show_snackbar(page, "Bitte zuerst einen Shelly eingeben oder suchen.", bgcolor=ft.Colors.ORANGE_700)
+            show_snackbar(page, _("Bitte zuerst einen Shelly eingeben oder suchen."), bgcolor=ft.Colors.ORANGE_700)
             page.update()
             return
         for btn in sync_buttons:
             btn.disabled = True
-        show_snackbar(page, "Synchronisierung gestartet …", bgcolor=ft.Colors.GREEN_700, duration=2000)
+        show_snackbar(page, _("Synchronisierung gestartet …"), bgcolor=ft.Colors.GREEN_700, duration=2000)
         page.update()
 
         def log_sync(m):
@@ -668,7 +696,7 @@ async def main(page: ft.Page):
         else:
             load_data()
             refresh_all_charts()
-            show_snackbar(page, "Synchronisierung abgeschlossen.")
+            show_snackbar(page, _("Synchronisierung abgeschlossen."))
         for btn in sync_buttons:
             btn.disabled = False
         page.update()
@@ -676,7 +704,7 @@ async def main(page: ft.Page):
 
     def make_chart_tab(chart_col):
         """Wrap a chart column with a dedicated sync button at the top."""
-        btn = ft.Button("Daten synchronisieren", on_click=on_sync, icon=ft.Icons.SYNC)
+        btn = ft.Button(_("Daten synchronisieren"), on_click=on_sync, icon=ft.Icons.SYNC)
         sync_buttons.append(btn)
         result = ft.Column(
             [
@@ -745,9 +773,9 @@ async def main(page: ft.Page):
 
 
     import_status      = ft.Text("", color=ft.Colors.GREY_400)
-    import_path_field  = ft.TextField(label="Pfad zur alten DB", width=400, read_only=True)
-    daterange_from = ft.TextField(label="Zeitraum begin: ", width=200, read_only=False, on_blur=checkdate)
-    daterange_to   = ft.TextField(label="Zeitraum Ende:",  width=200, read_only=False, on_blur=checkdate)
+    import_path_field  = ft.TextField(label=_("Pfad zur alten DB"), width=400, read_only=True)
+    daterange_from = ft.TextField(label=_("Zeitraum begin: "), width=200, read_only=False, on_blur=checkdate)
+    daterange_to   = ft.TextField(label=_("Zeitraum Ende:"),  width=200, read_only=False, on_blur=checkdate)
     daterange_from.value = settings["date_from"]
     daterange_to.value   = settings["date_to"]
 
@@ -780,7 +808,7 @@ async def main(page: ft.Page):
     async def on_pick_file(_e):
         """Open a file picker to select the old database file."""
         result = await ft.FilePicker().pick_files(
-            dialog_title="Alte DB auswählen",
+            dialog_title=_("Alte DB auswählen"),
             allowed_extensions=["db"],
             initial_directory=get_default_db_dir(),
         )
@@ -794,12 +822,12 @@ async def main(page: ft.Page):
         old_path = import_path_field.value.strip()
         mac      = mac_dropdown.value
         if not old_path:
-            import_status.value = "Bitte eine Datei auswählen."
+            import_status.value = _("Bitte eine Datei auswählen.")
             import_status.color = ft.Colors.ORANGE_400
             page.update()
             return
         if not mac:
-            import_status.value = "Bitte eine MAC auswählen."
+            import_status.value = _("Bitte eine MAC auswählen.")
             import_status.color = ft.Colors.ORANGE_400
             page.update()
             return
@@ -836,21 +864,21 @@ async def main(page: ft.Page):
 
     import_content = ft.Column(
         [
-            ft.Text("Migration alter Datenbank", size=14, weight=ft.FontWeight.BOLD),
-            ft.Text("Wähle die alte energy.db und die Ziel-MAC für die importierten Daten.", color=ft.Colors.GREY_400),
+            ft.Text(_("Migration alter Datenbank"), size=14, weight=ft.FontWeight.BOLD),
+            ft.Text(_("Wähle die alte energy.db und die Ziel-MAC für die importierten Daten."), color=ft.Colors.GREY_400),
             ft.Divider(),
             mac_dropdown,
-            ft.Row([import_path_field, ft.Button("Datei wählen", on_click=on_pick_file)]),
-            ft.Button("Migrieren", on_click=on_migrate, icon=ft.Icons.UPLOAD),
+            ft.Row([import_path_field, ft.Button(_("Datei wählen"), on_click=on_pick_file)]),
+            ft.Button(_("Migrieren"), on_click=on_migrate, icon=ft.Icons.UPLOAD),
             import_status,
             ft.Divider(),
-            ft.Text("Anzeige-Zeitraum", size=14, weight=ft.FontWeight.BOLD),
+            ft.Text(_("Anzeige-Zeitraum"), size=14, weight=ft.FontWeight.BOLD),
             ft.Row([daterange_from, daterange_to]),
-            ft.Button("Zeitraum zurücksetzen", on_click=on_reset_range, icon=ft.Icons.RESTART_ALT),
+            ft.Button(_("Zeitraum zurücksetzen"), on_click=on_reset_range, icon=ft.Icons.RESTART_ALT),
             ft.Divider(),
-            ft.Text("Verwendete Pfade", size=14, weight=ft.FontWeight.BOLD),
-            ft.Text(f"Datenbank:  {db_path}", size=11, color=ft.Colors.GREY_400, selectable=True),
-            ft.Text(f"Einstellungen:  {config.path}", size=11, color=ft.Colors.GREY_400, selectable=True),
+            ft.Text(_("Verwendete Pfade"), size=14, weight=ft.FontWeight.BOLD),
+            ft.Text(f"{_("Datenbank:")}  {db_path}", size=11, color=ft.Colors.GREY_400, selectable=True),
+            ft.Text(f"{_("Einstellungen:")}  {config.path}", size=11, color=ft.Colors.GREY_400, selectable=True),
         ],
         scroll=ft.ScrollMode.AUTO,
         expand=True,
@@ -880,12 +908,12 @@ async def main(page: ft.Page):
                 controls=[
                     ft.TabBar(
                         tabs=[
-                            ft.Tab(label="Monat kWh"),
-                            ft.Tab(label="Jahr kWh"),
-                            ft.Tab(label="Monat Kosten"),
-                            ft.Tab(label="Jahr Kosten"),
-                            ft.Tab(label="Einstellungen"),
-                            ft.Tab(label="Import & Data"),
+                            ft.Tab(label=_("Monat kWh")),
+                            ft.Tab(label=_("Jahr kWh")),
+                            ft.Tab(label=_("Monat Kosten")),
+                            ft.Tab(label=_("Jahr Kosten")),
+                            ft.Tab(label=_("Einstellungen")),
+                            ft.Tab(label=_("Import & Data")),
                         ]
                     ),
                     ft.TabBarView(
@@ -918,7 +946,7 @@ async def main(page: ft.Page):
     refresh_all_charts()
     page.update()
     if not monthly_data:
-        show_snackbar(page, "Keine Daten vorhanden, bitte synchronisieren.")
+        show_snackbar(page, _("Keine Daten vorhanden, bitte synchronisieren."))
 
 
 ft.run(main)
